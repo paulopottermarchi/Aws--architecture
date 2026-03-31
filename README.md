@@ -15,7 +15,58 @@ The architecture covers the full data flow: from API ingestion through load bala
 
 ## Architecture Diagram
 
-<img width="2047" height="1469" alt="file-AHoxToB3sAazylVoA2vNHD9t-Itau Diagrama Cloud 1" src="https://github.com/user-attachments/assets/b8ec5e7b-41f3-4e35-ac92-0ade998127fc" />
+                                   ┌───────────────┐
+                                   │   Database    │
+                                   │               │
+                      ┌─────────────────┬─────────────────┐
+                      │                 │                 │
+                      │                 │                 │
+                   ┌──▼──┐           ┌──▼──┐           ┌──▼──┐
+                   │Multi-│          │Multi-│         │Cross-│
+                   │  AZ  │          │  AZ  │         │Region│
+                   │ Node │          │ Node │         │Replica
+                   └──┬──┘           └──┬──┘           └──┬──┘
+                      │                 │                 │
+                      │                 │                 │
+┌───────────┐      ┌─▼──┐           ┌──▼──┐            ┌──▼──┐
+│API Gateway│      │Main│           │Worker│           │Worker│
+└──────┬────┘      │Server          │Node 1│           │Node 2│
+       │           └──┬──┘          └───┬─┘            └──┬──┘
+       │              │                 │                 │
+       │              │                 │                 │
+       │          ┌──▼──┐           ┌───▼───┐         ┌───▼───┐
+┌───────▼───────┐ │     │           │       │         │       │
+│Load Balancer  │ │Queue│           │Worker │         │Worker │
+└───────────────┘ │     │           │Node 3 │         │Node 4 │
+                  └──┬──┘           └───┬───┘         └───┬───┘
+                     │                  │                 │
+                     │                  │                 │
+                  ┌──▼──┐           ┌───▼───┐         ┌───▼───┐
+                  │Lambda│          │       │         │       │
+                  │Function         │Analytics        │VPC    │
+                  └───┬─┘           └───────┘         │Subnet │
+                      │                               └───────┘
+                   ┌──▼──┐
+                   │Data │
+                   │Store│
+                   └──┬──┘
+                      │
+           ┌──────────┴──────────┐
+           │                     │ 
+  ┌────────▼──────┐       ┌──────▼────────┐
+  │Azure          │       │Google         │
+  │Blob Storage   │       │Cloud Storage  │
+  └───────────────┘       └───────────────┘
+           │                         │
+  ┌────────┴─────────────────────────┴──────────┐
+  │                   Storage                   │
+  │        ┌────────────┐          ┌───────────┐│
+  │        │            │          │           ││
+  └────────┤     S3     │──────────┤  Glacier  ││
+           │            │          │           ││
+           └────────────┘          └───────────┘│
+                Lifecycle Policy                │
+                         ───────────────────────┘
 
 
 > Components follow AWS icon conventions. The diagram covers all layers: ingestion, compute, database, and storage.
