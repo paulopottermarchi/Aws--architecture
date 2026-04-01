@@ -1,0 +1,66 @@
+                                  ┌───────────────┐
+                                   │   Database    │
+                                   │               │
+                      ┌─────────────────┬─────────────────┐
+                      │                 │                 │
+                      │                 │                 │
+                   ┌──▼──┐           ┌──▼──┐           ┌──▼──┐
+                   │Multi-│          │Multi-│         │Cross-│
+                   │  AZ  │          │  AZ  │         │Region│
+                   │ Node │          │ Node │         │Replica
+                   └──┬──┘           └──┬──┘           └──┬──┘
+                      │                 │                 │
+                      │                 │                 │
+┌───────────┐      ┌─▼──┐           ┌──▼──┐            ┌──▼──┐
+│API Gateway│      │Main│           │Worker│           │Worker│
+└──────┬────┘      │Server          │Node 1│           │Node 2│
+       │           └──┬──┘          └───┬─┘            └──┬──┘
+       │              │                 │                 │
+       │              │                 │                 │
+       │          ┌──▼──┐           ┌───▼───┐         ┌───▼───┐
+┌───────▼───────┐ │     │           │       │         │       │
+│Load Balancer  │ │Queue│           │Worker │         │Worker │
+└───────────────┘ │     │           │Node 3 │         │Node 4 │
+                  └──┬──┘           └───┬───┘         └───┬───┘
+                     │                  │                 │
+                     │                  │                 │
+                  ┌──▼──┐           ┌───▼───┐         ┌───▼───┐
+                  │Lambda│          │       │         │       │
+                  │Function         │Analytics        │VPC    │
+                  └───┬─┘           └───────┘         │Subnet │
+                      │                               └───────┘
+                   ┌──▼──┐
+                   │Data │
+                   │Store│
+                   └──┬──┘
+                      │
+           ┌──────────┴──────────┐
+           │                     │ 
+  ┌────────▼──────┐       ┌──────▼────────┐
+  │Azure          │       │Google         │
+  │Blob Storage   │       │Cloud Storage  │
+  └───────────────┘       └───────────────┘
+           │                         │
+  ┌────────┴─────────────────────────┴──────────┐
+  │                   Storage                   │
+  │        ┌────────────┐          ┌───────────┐│
+  │        │            │          │           ││
+  └────────┤     S3     │──────────┤  Glacier  ││
+           │            │          │           ││
+           └────────────┘          └───────────┘│
+                Lifecycle Policy                │
+                         ───────────────────────┘
+
+
+
+
+Explicação do diagrama:
+
+Utiliza o padrão de ícones e convenções da AWS para os diferentes serviços e componentes.
+A camada de banco de dados é representada por um cluster Multi-AZ (Múltiplas Zonas de Disponibilidade) na região primária e uma réplica Cross-Region para recuperação de desastre.
+A camada de aplicação inclui o API Gateway, Load Balancer, fila (Queue), workers (Worker Nodes) e uma função Lambda.
+O armazenamento de dados é feito no Amazon S3, com uma política de ciclo de vida (Lifecycle Policy) para transição de dados antigos para o Amazon Glacier (arquivamento de baixo custo).
+Serviços adicionais, como Analytics e VPC Subnet, são representados.
+A solução multi-cloud é mostrada com o Azure Blob Storage e o Google Cloud Storage integrados ao armazenamento.
+
+Esse diagrama segue as convenções de diagramação recomendadas pela AWS, fornecendo uma representação visual clara e padronizada da arquitetura proposta.
